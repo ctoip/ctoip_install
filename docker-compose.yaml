@@ -1,0 +1,60 @@
+version: "3"
+services:
+  db:
+    container_name: ctoip_db
+    build:
+      context: .
+      dockerfile: Dockerfile.db
+      args:
+        SQLFILE: https://github.com/Dew-OF-Aurora/ctoip/releases/download/jar/ctoip_db.sql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      - net_ctoip
+  redis:
+    container_name: ctoip_redis
+    image: redis
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "root"]
+    ports:
+      - "6379:6379"
+    networks:
+      - net_ctoip
+  web:
+    depends_on:
+      - db
+      - redis
+      - spring
+    container_name: ctoip_web
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      args:
+        SERVERIP: ctoip_spring
+        DISTFILE: https://github.com/Dew-OF-Aurora/ctoip_vue/releases/download/dist/dist.tar.gz
+        NGINXCONF: https://github.com/Dew-OF-Aurora/ctoip_vue/releases/download/dist/nginx.conf
+    ports:
+      - "80:80"
+    networks:
+      - net_ctoip
+  spring:
+    depends_on:
+      - db
+      - redis
+    container_name: ctoip_spring
+    build:
+      context: .
+      dockerfile: Dockerfile.spring
+      args:
+        MYSQLIP: ctoip_db
+        REDISIP: ctoip_redis
+        JARFILE: https://github.com/Dew-OF-Aurora/ctoip/releases/download/jar/ctoip.jar
+        APPYMLFILE: https://github.com/Dew-OF-Aurora/ctoip/releases/download/jar/application.yml
+    ports:
+      - "8081:8081"
+    networks:
+      - net_ctoip
+networks:
+  net_ctoip:
+    driver: bridge

@@ -1,0 +1,24 @@
+FROM ubuntu:22.04
+MAINTAINER Aurora
+
+WORKDIR /usr/local
+ARG MYSQLIP
+ARG REDISIP
+ARG JARFILE
+ARG APPYMLFILE
+
+RUN sed -ri 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list \
+    && apt-get update \
+    && apt-get install --no-install-recommends --no-install-suggests -y wget \
+    && apt-get install --no-install-recommends --no-install-suggests -y openjdk-8-jdk \
+    && apt-get install --no-install-recommends --no-install-suggests -y nmap \
+    && apt-get install --no-install-recommends --no-install-suggests -y gettext \
+    && java -version \
+    && wget -O ctoip.jar ${JARFILE} \
+    && wget -O tmlapplication.yml ${APPYMLFILE} \
+    && envsubst '${MYSQLIP},${REDISIP}' < tmlapplication.yml > application.yml \
+    && rm -f tmlapplication.yml
+
+EXPOSE 8081
+CMD ["java","-jar","ctoip.jar","--spring.config.location=/usr/local/"]
+
