@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile.db
       args:
-        SQLFILE: https://github.com/Dew-OF-Aurora/ctoip/releases/download/jar/ctoip_db.sql
+        SQLFILE: https://github.com/Dew-OF-Aurora/ctoip/releases/download/2023407/ctoip_db.sql
     ports:
       - "3306:3306"
     environment:
@@ -32,8 +32,8 @@ services:
       dockerfile: Dockerfile.web
       args:
         SERVERIP: ctoip_spring
-        DISTFILE: https://github.com/Dew-OF-Aurora/ctoip_vue/releases/download/dist/dist.tar.gz
-        NGINXCONF: https://github.com/Dew-OF-Aurora/ctoip_vue/releases/download/dist/nginx.conf
+        DISTFILE: https://github.com/Dew-OF-Aurora/ctoip_vue/releases/download/2023407/dist.tar.gz
+        NGINXCONF: https://github.com/Dew-OF-Aurora/ctoip_vue/releases/download/2023407/nginx.conf
     ports:
       - "80:80"
     networks:
@@ -49,8 +49,8 @@ services:
       args:
         MYSQLIP: ctoip_db
         REDISIP: ctoip_redis
-        JARFILE: https://github.com/Dew-OF-Aurora/ctoip/releases/download/jar/ctoip.jar
-        APPYMLFILE: https://github.com/Dew-OF-Aurora/ctoip/releases/download/jar/application.yml
+        JARFILE: https://github.com/Dew-OF-Aurora/ctoip/releases/download/2023407/ctoip.jar
+        APPYMLFILE: https://github.com/Dew-OF-Aurora/ctoip/releases/download/2023407/application.yml
     ports:
       - "8081:8081"
     networks:
