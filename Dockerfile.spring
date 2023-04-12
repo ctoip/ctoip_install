@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM debian:bullseye-slim
 MAINTAINER Aurora
 
 ARG MYSQLIP
@@ -8,7 +8,13 @@ ARG APPYMLFILE
 
 WORKDIR /usr/local
 
-RUN sed -ri 's/archive.ubuntu.com/mirrors.163.com/g' /etc/apt/sources.list \
+RUN apt-get update \
+    && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates \
+    && apt-get install --no-install-recommends --no-install-suggests -y software-properties-common \
+    && apt-add-repository 'deb http://security.debian.org/debian-security stretch/updates main'
+
+
+RUN sed -i "s@http://deb.debian.org@https://mirrors.163.com@g" /etc/apt/sources.list \
     && apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests -y wget \
     && apt-get install --no-install-recommends --no-install-suggests -y openjdk-8-jdk \
