@@ -15,8 +15,7 @@ WORKDIR $HTMLPATH/dist
 RUN tar -xzvf dist.tar.gz
 
 WORKDIR $NGINXPATH
-RUN mv nginx.conf nginx.conf.bak \
-    && curl -fL -o tmpnginx.conf ${NGINXCONF} \
+RUN mv nginx.conf tmpnginx.conf \
     && envsubst '${HTMLPATH},${SERVERIP}' < tmpnginx.conf > nginx.conf
 
 EXPOSE 80
