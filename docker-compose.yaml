@@ -32,7 +32,7 @@ services:
       dockerfile: Dockerfile.web
       args:
         SERVERIP: ctoip_spring
-        DISTFILE: https://github.com/ctoip/ctoip_install/releases/download/2023416/dist.tar.gz
+        DISTFILE: https://github.com/ctoip/ctoip_install/releases/download/2023417/dist.tar.gz
         NGINXCONF: https://github.com/ctoip/ctoip_install/releases/download/2023416/nginx.conf
     ports:
       - "80:80"
@@ -49,7 +49,7 @@ services:
       args:
         MYSQLIP: ctoip_db
         REDISIP: ctoip_redis
-        JARFILE: https://github.com/ctoip/ctoip_install/releases/download/2023416/ctoip.jar
+        JARFILE: https://github.com/ctoip/ctoip_install/releases/download/2023417/ctoip.jar
         APPYMLFILE: https://github.com/ctoip/ctoip_install/releases/download/2023416/application.yml
     ports:
       - "8081:8081"
