@@ -1,42 +1,63 @@
 # CLAUDE.md
 
-## 项目定位
-- 子项目：`ctoip_docker`
-- 类型：Docker Compose 一键部署（前后端分离 + DB + Redis）
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 核心启动文件
-- 编排文件：`docker-compose.yaml`
-- 部署脚本：`deploy.sh`
-- 环境模板：`.env.example`
+## Project summary
 
-## 启动拓扑
-- `db`：MySQL 8，启动时导入 SQL
-- `redis`：Redis（requirepass=root）
-- `spring`：后端服务，依赖 db/redis
-- `web`：Nginx 托管前端，依赖 db/redis/spring
+- Service: `ctoip_docker` deployment orchestration
+- Role: run full stack with Docker Compose
+- Services: `db` (MySQL), `redis`, `spring` (backend), `web` (frontend)
 
-## compose 启动命令
+## Commands
+
+### One-command deployment
+
 ```bash
-docker compose up --build
+cp .env.example .env
+# edit required secrets first
+bash deploy.sh
 ```
 
-## compose 停止命令
+### Core compose operations
+
 ```bash
+docker compose ps
+docker compose logs -f spring
+docker compose logs -f db
 docker compose down
 ```
 
-## 镜像来源（重点）
-- 后端镜像：由 `ctoip` 仓库 `Dockerfile + backend-image.yml` 构建并推送 GHCR
-- 前端镜像：由 `ctoip_vue` 仓库 `Dockerfile + frontend-image.yml` 构建并推送 GHCR
-- 本仓库通过 `IMAGE_TAG` 拉取镜像并部署，不承担应用镜像构建
+### Recreate only dependencies
 
-## 与其它子项目关系
-- 运行时会消费 `ctoip` 发布的 jar
-- 运行时会消费 `ctoip_vue` 发布的 dist 包
-- 此仓库本身是部署编排层，不是业务源码主仓
+```bash
+docker compose up -d --build db redis
+docker compose up -d spring web
+```
 
-## 当前已确认端口
-- 80 -> web
-- 8081 -> spring
-- 3306 -> db
-- 6379 -> redis
+### Reset DB initialization
+
+```bash
+docker compose down
+docker volume rm ctoip_docker_db_data
+docker compose up -d
+```
+
+## Runtime topology and image flow
+
+- `db` is built locally from `Dockerfile.db` and initialized with `sql/ctoip_db.sql`.
+- `redis` uses official `redis:7-alpine` image.
+- `spring` pulls `ghcr.io/ctoip/ctoip-backend:${IMAGE_TAG}`.
+- `web` pulls `ghcr.io/ctoip/ctoip-frontend:${IMAGE_TAG}`.
+
+`deploy.sh` intentionally pulls only app images (`spring`, `web`) while creating `db`/`redis` locally.
+
+## Environment and connectivity model
+
+- Main config source: `.env` (copied from `.env.example`).
+- Spring DB/Redis credentials are injected via compose environment variables.
+- `spring` starts only after `db` and `redis` pass health checks.
+- Internal service discovery uses compose service names (`db`, `redis`, `spring`).
+
+## Common failure pattern
+
+If frontend login fails with backend JDBC `Communications link failure`, check for MySQL restart loop/OOM on host first (`dmesg`, db logs) before changing app config.
