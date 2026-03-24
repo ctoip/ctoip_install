@@ -102,19 +102,7 @@ bash deploy.sh
 
 ## 5. 本地源码构建联调（可选）
 
-如果你要在本机直接用源码构建镜像（不依赖 GHCR）：
-
-```bash
-docker compose -f docker-compose.yaml -f docker-compose.build.yaml build spring web
-docker compose -f docker-compose.yaml -f docker-compose.build.yaml up -d
-```
-
-说明：
-- `docker-compose.build.yaml` 覆盖了 `spring/web` 的 `build` 配置
-- 构建上下文是项目根目录（`..`），会读取：
-  - `ctoip/`
-  - `ctoip_vue/`
-  - `ctoip_docker/`
+镜像由 `ctoip` 与 `ctoip_vue` 仓库的 GitHub Actions 构建并推送到 GHCR，部署仓只负责拉取并编排运行。
 
 ---
 

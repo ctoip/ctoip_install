@@ -6,10 +6,8 @@
 
 ## 核心启动文件
 - 编排文件：`docker-compose.yaml`
-- 镜像构建：
-  - `Dockerfile.db`
-  - `Dockerfile.spring`
-  - `Dockerfile.web`
+- 部署脚本：`deploy.sh`
+- 环境模板：`.env.example`
 
 ## 启动拓扑
 - `db`：MySQL 8，启动时导入 SQL
@@ -27,10 +25,10 @@ docker compose up --build
 docker compose down
 ```
 
-## 镜像构建逻辑（重点）
-- `Dockerfile.db`：通过 `SQLFILE` 下载 `ctoip_db.sql` 到 `/docker-entrypoint-initdb.d/`
-- `Dockerfile.spring`：下载后端 jar 与模板 `application.yml`，使用 `envsubst` 注入 `MYSQLIP`/`REDISIP`
-- `Dockerfile.web`：下载前端 `dist.tar.gz` 与 nginx.conf，注入 `SERVERIP` 后启动 nginx
+## 镜像来源（重点）
+- 后端镜像：由 `ctoip` 仓库 `Dockerfile + backend-image.yml` 构建并推送 GHCR
+- 前端镜像：由 `ctoip_vue` 仓库 `Dockerfile + frontend-image.yml` 构建并推送 GHCR
+- 本仓库通过 `IMAGE_TAG` 拉取镜像并部署，不承担应用镜像构建
 
 ## 与其它子项目关系
 - 运行时会消费 `ctoip` 发布的 jar
