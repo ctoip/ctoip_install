@@ -1,29 +1,19 @@
-FROM debian:bullseye-slim
-MAINTAINER Aurora
+FROM eclipse-temurin:8-jdk-jammy AS builder
 
-ARG MYSQLIP
-ARG REDISIP
-ARG JARFILE
-ARG APPYMLFILE
+WORKDIR /workspace
+COPY ctoip/ ./ctoip/
+WORKDIR /workspace/ctoip
+RUN chmod +x mvnw && ./mvnw clean package -DskipTests
+
+FROM eclipse-temurin:8-jre-jammy
 
 WORKDIR /usr/local
-
 RUN apt-get update \
-    && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates \
-    && apt-get install --no-install-recommends --no-install-suggests -y software-properties-common \
-    && apt-add-repository 'deb http://security.debian.org/debian-security stretch/updates main'
+    && apt-get install --no-install-recommends -y nmap \
+    && rm -rf /var/lib/apt/lists/*
 
-
-RUN apt-get update \
-    && apt-get install --no-install-recommends --no-install-suggests -y wget \
-    && apt-get install --no-install-recommends --no-install-suggests -y openjdk-8-jdk \
-    && apt-get install --no-install-recommends --no-install-suggests -y nmap \
-    && apt-get install --no-install-recommends --no-install-suggests -y gettext \
-    && wget -O ctoip.jar ${JARFILE} \
-    && wget -O tmlapplication.yml ${APPYMLFILE} \
-    && envsubst '${MYSQLIP},${REDISIP}' < tmlapplication.yml > application.yml \
-    && rm -f tmlapplication.yml
+COPY --from=builder /workspace/ctoip/target/*.jar /usr/local/ctoip.jar
+COPY ctoip/release/application.yml /usr/local/application.yml
 
 EXPOSE 8081
-CMD ["java","-jar","ctoip.jar","--spring.config.location=/usr/local/"]
-
+CMD ["java", "-jar", "ctoip.jar", "--spring.config.location=/usr/local/application.yml"]

@@ -1,9 +1,6 @@
 FROM mysql:8.0.32
-MAINTAINER Aurora
-ARG SQLFILE
 
-RUN curl -fL -o ctoip_db.sql ${SQLFILE} \
-    && mv ctoip_db.sql /docker-entrypoint-initdb.d/
+COPY sql/ctoip_db.sql /docker-entrypoint-initdb.d/ctoip_db.sql
 
 EXPOSE 3306
 CMD ["mysqld"]

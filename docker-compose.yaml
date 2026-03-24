@@ -1,60 +1,82 @@
-version: "3"
+version: "3.9"
+
 services:
   db:
     container_name: ctoip_db
-    build:
-      context: .
-      dockerfile: Dockerfile.db
-      args:
-        SQLFILE: https://github.com/ctoip/ctoip_install/releases/download/2023416/ctoip_db.sql
+    image: mysql:8.0.32
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ctoip_db
     ports:
       - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./sql/ctoip_db.sql:/docker-entrypoint-initdb.d/ctoip_db.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
     networks:
       - net_ctoip
+
   redis:
     container_name: ctoip_redis
-    image: redis
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", "root"]
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-root}"]
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-root}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
     networks:
       - net_ctoip
-  web:
-    depends_on:
-      - db
-      - redis
-      - spring
-    container_name: ctoip_web
-    build:
-      context: .
-      dockerfile: Dockerfile.web
-      args:
-        SERVERIP: ctoip_spring
-        DISTFILE: https://github.com/ctoip/ctoip_vue/releases/download/2023418/dist.tar.gz
-        NGINXCONF: https://github.com/ctoip/ctoip_install/releases/download/2023416/nginx.conf
-    ports:
-      - "80:80"
-    networks:
-      - net_ctoip
+
   spring:
-    depends_on:
-      - db
-      - redis
     container_name: ctoip_spring
-    build:
-      context: .
-      dockerfile: Dockerfile.spring
-      args:
-        MYSQLIP: ctoip_db
-        REDISIP: ctoip_redis
-        JARFILE: https://github.com/ctoip/ctoip/releases/download/2023418/ctoip.jar
-        APPYMLFILE: https://github.com/ctoip/ctoip_install/releases/download/2023416/application.yml
+    image: ghcr.io/ctoip/ctoip-backend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/ctoip_db?useUnicode=true&useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD:-root}
+      AURORA_JWT_SECRET: ${JWT_SECRET:-d6wd91w61daw1d6a1wd9w9d9w2j4j3j4}
+      AURORA_APIKEY_THREATBOOKAPIKEY: ${THREATBOOK_API_KEY:-}
+      AURORA_APIKEY_VTAPIKEY: ${VT_API_KEY:-}
     ports:
       - "8081:8081"
     networks:
       - net_ctoip
+
+  web:
+    container_name: ctoip_web
+    image: ghcr.io/ctoip/ctoip-frontend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      - spring
+    ports:
+      - "80:80"
+    networks:
+      - net_ctoip
+
 networks:
   net_ctoip:
     driver: bridge
+
+volumes:
+  db_data:
+  redis_data:

@@ -1,23 +1,15 @@
-From nginx:1.22.1
-MAINTAINER Aurora
+FROM node:16-bullseye AS builder
 
-ENV HTMLPATH /usr/share/nginx/html
-ENV NGINXPATH /etc/nginx
-ARG SERVERIP
-ARG DISTFILE
-ARG NGINXCONF
+WORKDIR /workspace/ctoip_vue
+COPY ctoip_vue/package*.json ./
+RUN npm ci
+COPY ctoip_vue/ ./
+RUN npm run build
 
-ADD ${DISTFILE} $HTMLPATH/dist/
-ADD ${NGINXCONF} ${NGINXPATH}/
+FROM nginx:1.27-alpine
 
-WORKDIR $HTMLPATH/dist
-
-RUN tar -xzvf dist.tar.gz
-
-WORKDIR $NGINXPATH
-RUN mv nginx.conf tmpnginx.conf \
-    && envsubst '${HTMLPATH},${SERVERIP}' < tmpnginx.conf > nginx.conf
+COPY ctoip_docker/nginx.conf /etc/nginx/nginx.conf
+COPY --from=builder /workspace/ctoip_vue/dist /usr/share/nginx/html/dist
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
-
