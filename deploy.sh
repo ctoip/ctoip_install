@@ -39,11 +39,14 @@ if [[ -n "${GHCR_USER:-}" && -n "${GHCR_TOKEN:-}" ]]; then
   echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
 fi
 
-echo "[INFO] 拉取镜像..."
-"${COMPOSE_CMD[@]}" pull
+echo "[INFO] 拉取前后端镜像..."
+"${COMPOSE_CMD[@]}" pull spring web
 
-echo "[INFO] 启动服务..."
-"${COMPOSE_CMD[@]}" up -d
+echo "[INFO] 创建并启动基础服务（db/redis）..."
+"${COMPOSE_CMD[@]}" up -d --build db redis
+
+echo "[INFO] 启动应用服务（spring/web）..."
+"${COMPOSE_CMD[@]}" up -d spring web
 
 echo
 
