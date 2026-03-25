@@ -44,12 +44,12 @@ docker compose up -d
 
 ## Runtime topology and image flow
 
-- `db` is built locally from `Dockerfile.db` and initialized with `sql/ctoip_db.sql`.
+- `db` uses official `mysql:8.0.32` image and mounts `sql/ctoip_db.sql` into `/docker-entrypoint-initdb.d/` for first-start initialization.
 - `redis` uses official `redis:7-alpine` image.
 - `spring` pulls `ghcr.io/ctoip/ctoip-backend:${IMAGE_TAG}`.
 - `web` pulls `ghcr.io/ctoip/ctoip-frontend:${IMAGE_TAG}`.
 
-`deploy.sh` intentionally pulls only app images (`spring`, `web`) while creating `db`/`redis` locally.
+`deploy.sh` intentionally pulls only app images (`spring`, `web`) while creating `db`/`redis` locally via compose service definitions.
 
 ## Environment and connectivity model
 

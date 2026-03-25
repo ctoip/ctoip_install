@@ -1,10 +1,7 @@
 services:
   db:
     container_name: ctoip_db
-    build:
-      context: .
-      dockerfile: Dockerfile.db
-    image: ctoip-db:${IMAGE_TAG:-latest}
+    image: mysql:8.0.32
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
@@ -13,6 +10,7 @@ services:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
+      - ./sql/ctoip_db.sql:/docker-entrypoint-initdb.d/ctoip_db.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD:-root}"]
       interval: 10s
