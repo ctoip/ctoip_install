@@ -23,6 +23,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 20
+    networks:
+      - net_ctoip_dev
 
   redis:
     container_name: ctoip_redis_dev
@@ -45,6 +47,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 20
+    networks:
+      - net_ctoip_dev
+
+networks:
+  net_ctoip_dev:
+    driver: bridge
 
 volumes:
   db_data_dev:
