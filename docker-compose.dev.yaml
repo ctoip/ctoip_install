@@ -11,18 +11,31 @@ services:
     volumes:
       - db_data_dev:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-p${MYSQL_ROOT_PASSWORD:-root}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 20
-    networks:
-      - net_ctoip
 
   redis:
     container_name: ctoip_redis_dev
     image: redis:7-alpine
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-root}"]
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--requirepass",
+        "${REDIS_PASSWORD:-root}",
+      ]
     ports:
       - "6379:6379"
     volumes:
@@ -32,12 +45,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 20
-    networks:
-      - net_ctoip
-
-networks:
-  net_ctoip:
-    driver: bridge
 
 volumes:
   db_data_dev:
